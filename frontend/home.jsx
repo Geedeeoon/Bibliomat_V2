@@ -1,5 +1,29 @@
 // Home / Dashboard - "Startseite mit großen Aktionen"
 
+const BENACHRICHTIGUNG_DISMISS_KEY = 'bibliomat_dismissed_benachrichtigungen';
+
+// Signatur ändert sich, sobald sich die betroffenen Datensätze ändern (z.B. neuer
+// alter Entwurf kommt dazu) — eine weggeklickte Benachrichtigung taucht dann wieder
+// auf, statt für immer unterdrückt zu bleiben.
+function benachrichtigungSignatur(b) {
+  const ids = (b.schueler || []).map(s => s.id).sort().join(',');
+  return `${b.typ}::${ids || b.beschreibung || ''}`;
+}
+
+function ladeDismissedBenachrichtigungen() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(BENACHRICHTIGUNG_DISMISS_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function speicherDismissedBenachrichtigungen(set) {
+  try {
+    localStorage.setItem(BENACHRICHTIGUNG_DISMISS_KEY, JSON.stringify([...set]));
+  } catch {}
+}
+
 function ArchivLoeschenPanel({ item, onClose, onErledigt }) {
   const [selected, setSelected] = React.useState(() => new Set(item.schueler.map(s => s.id)));
   const [loading, setLoading] = React.useState(false);
@@ -80,7 +104,7 @@ function ArchivLoeschenPanel({ item, onClose, onErledigt }) {
   );
 }
 
-function GlockePanel({ benachrichtigungen, onClose, onRefresh, onNav }) {
+function GlockePanel({ benachrichtigungen, onClose, onRefresh, onNav, onDismiss }) {
   const [aktiveItem, setAktiveItem] = React.useState(null);
 
   if (aktiveItem) {
@@ -121,7 +145,18 @@ function GlockePanel({ benachrichtigungen, onClose, onRefresh, onNav }) {
               <Icon name={b.typ === 'schuljahr_wechsel' ? 'bell' : 'archive'} size={15}/>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{b.titel}</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{b.titel}</div>
+                <button
+                  onClick={() => onDismiss && onDismiss(b)}
+                  title="Benachrichtigung wegklicken"
+                  style={{ background: 'none', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: 2, flexShrink: 0, lineHeight: 0 }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#94a3b8'}
+                  onMouseLeave={e => e.currentTarget.style.color = '#cbd5e1'}
+                >
+                  <Icon name="x" size={13}/>
+                </button>
+              </div>
               <div style={{ fontSize: 12, color: '#64748b', marginTop: 3, lineHeight: 1.45 }}>{b.beschreibung}</div>
               {b.typ === 'archiv_abgelaufen' && (
                 <button
@@ -165,12 +200,26 @@ function Home({ onNav, onOpenStudent, accent, density }) {
   const [unversandt, setUnversandt] = React.useState([]);
   const [activeStat, setActiveStat] = React.useState(null);
   const [benachrichtigungen, setBenachrichtigungen] = React.useState([]);
+  const [dismissedBenachrichtigungen, setDismissedBenachrichtigungen] = React.useState(() => ladeDismissedBenachrichtigungen());
   const [showGlocke, setShowGlocke] = React.useState(false);
   const glockeRef = React.useRef(null);
 
   const ladebenachrichtigungen = () => {
     window.api.benachrichtigungen.list().then(res => setBenachrichtigungen(res.items || [])).catch(console.error);
   };
+
+  const dismissBenachrichtigung = (b) => {
+    setDismissedBenachrichtigungen(prev => {
+      const next = new Set(prev);
+      next.add(benachrichtigungSignatur(b));
+      speicherDismissedBenachrichtigungen(next);
+      return next;
+    });
+  };
+
+  const sichtbareBenachrichtigungen = benachrichtigungen.filter(
+    b => !dismissedBenachrichtigungen.has(benachrichtigungSignatur(b))
+  );
 
   React.useEffect(() => {
     window.api.dashboard().then(setStats).catch(console.error);
@@ -383,21 +432,21 @@ function Home({ onNav, onOpenStudent, accent, density }) {
             title="Benachrichtigungen"
             style={{
               position: 'relative',
-              background: benachrichtigungen.length > 0 ? (showGlocke ? '#fde68a' : '#fef3c7') : (showGlocke ? '#f1f5f9' : '#fff'),
-              border: benachrichtigungen.length > 0 ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
+              background: sichtbareBenachrichtigungen.length > 0 ? (showGlocke ? '#fde68a' : '#fef3c7') : (showGlocke ? '#f1f5f9' : '#fff'),
+              border: sichtbareBenachrichtigungen.length > 0 ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
               borderRadius: 10,
               width: 40, height: 40,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer',
-              color: benachrichtigungen.length > 0 ? '#b45309' : '#64748b',
-              animation: benachrichtigungen.length > 0 && !showGlocke ? 'glocke-pulse 2s ease-in-out infinite' : 'none',
+              color: sichtbareBenachrichtigungen.length > 0 ? '#b45309' : '#64748b',
+              animation: sichtbareBenachrichtigungen.length > 0 && !showGlocke ? 'glocke-pulse 2s ease-in-out infinite' : 'none',
               transition: 'all .15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = benachrichtigungen.length > 0 ? '#fde68a' : '#f1f5f9'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = benachrichtigungen.length > 0 ? (showGlocke ? '#fde68a' : '#fef3c7') : (showGlocke ? '#f1f5f9' : '#fff'); }}
+            onMouseEnter={e => { e.currentTarget.style.background = sichtbareBenachrichtigungen.length > 0 ? '#fde68a' : '#f1f5f9'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = sichtbareBenachrichtigungen.length > 0 ? (showGlocke ? '#fde68a' : '#fef3c7') : (showGlocke ? '#f1f5f9' : '#fff'); }}
           >
             <Icon name="bell" size={18} stroke={2}/>
-            {benachrichtigungen.length > 0 && (
+            {sichtbareBenachrichtigungen.length > 0 && (
               <span style={{
                 position: 'absolute', top: -5, right: -5,
                 background: '#f59e0b', color: '#fff',
@@ -405,16 +454,17 @@ function Home({ onNav, onOpenStudent, accent, density }) {
                 borderRadius: 999, minWidth: 17, height: 17,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 padding: '0 4px', border: '1.5px solid #fff',
-              }}>{benachrichtigungen.length}</span>
+              }}>{sichtbareBenachrichtigungen.length}</span>
             )}
           </button>
 
           {showGlocke && (
             <GlockePanel
-              benachrichtigungen={benachrichtigungen}
+              benachrichtigungen={sichtbareBenachrichtigungen}
               onClose={() => setShowGlocke(false)}
               onRefresh={ladebenachrichtigungen}
               onNav={onNav}
+              onDismiss={dismissBenachrichtigung}
             />
           )}
         </div>
