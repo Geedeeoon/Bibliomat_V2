@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -76,6 +77,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Kompression ──────────────────────────────────────────────────────────
+# Komprimiert u.a. die unkomprimiert ausgelieferten Frontend-JS-Dateien
+# (verkauf.jsx, screens.jsx etc.) — deutlich kleinere Übertragung beim
+# ersten Laden der Seite.
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # ── API Routers ──────────────────────────────────────────────────────────
 from fastapi import Depends

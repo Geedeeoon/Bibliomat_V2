@@ -50,9 +50,29 @@
       transition: background-color 5000s ease-in-out 0s;
     }
   </style>
-  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+  <style>
+    #root:empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #root:empty::after {
+      content: "";
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid #cbd5e1;
+      border-top-color: #3b82f6;
+      animation: root-spin 0.7s linear infinite;
+    }
+    @keyframes root-spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <div id="root"></div>
