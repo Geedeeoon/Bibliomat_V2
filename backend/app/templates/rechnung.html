@@ -9,6 +9,24 @@
     @page {
       size: A4;
       margin: 18mm 18mm 26mm 18mm;
+      @bottom-left {
+        content: element(pageFooterLeft);
+        width: 44%;
+        padding: 6px 0 0 18mm;
+        border-top: 1px solid #ccc;
+      }
+      @bottom-right {
+        content: element(pageFooterRight);
+        width: 44%;
+        padding: 6px 18mm 0 0;
+        border-top: 1px solid #ccc;
+        text-align: right;
+      }
+      @bottom-center {
+        content: "";
+        width: 12%;
+        border-top: 1px solid #ccc;
+      }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -175,12 +193,16 @@
     .signature-role { font-size: 8.5pt; color: #777; margin-top: 1px; }
     .machine-note { margin-top: 14px; font-size: 8pt; color: #999; font-style: italic; }
 
-    /* ── Footer ── */
+    /* ── Footer ──
+       Liegt vorne im DOM (siehe Body-Ende), damit WeasyPrints "running
+       element" ab Seite 1 greift; order:1 sorgt dafür, dass er in der
+       Bildschirm-/HTML-Vorschau (flex-Body) trotzdem visuell zuletzt kommt. */
     .footer {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
+      order: 1;
       border-top: 1px solid #ccc;
       padding: 6px 18mm 5px;
       font-size: 7.5pt;
@@ -214,12 +236,38 @@
       .main-content {
         display: block !important;
         flex: none !important;
-        padding-bottom: 26mm;
+        padding-bottom: 0;
       }
+      /* Footer als wiederkehrendes @page-Randfeld statt position:fixed —
+         WeasyPrint reserviert dafür zuverlässig Platz auf jeder Seite, statt
+         den letzten Tabelleninhalt zu überlappen, wenn er knapp nicht mehr
+         auf die Seite passt (siehe BugFix.md: abgeschnittenes "Kunstgeld"). */
+      .footer {
+        position: static !important;
+        border: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+      }
+      .footer-address { position: running(pageFooterLeft); }
+      .footer-bank { position: running(pageFooterRight); }
     }
   </style>
 </head>
 <body>
+<!-- FOOTER (steht hier vorne im DOM, damit WeasyPrints "running element"
+     bereits ab Seite 1 greift — am Ende platziert würde er erst ab der
+     Seite erscheinen, auf der dieses Element im normalen Fluss läge) -->
+<div class="footer">
+  <div class="footer-address">
+    {{ schule.get('schule_name', '') }} · {{ schule.get('schule_strasse', '') }} ·
+    {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
+  </div>
+  <div class="footer-bank bank-info">
+    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}<br>
+    {{ schule.get('schule_bank', '') }}
+  </div>
+</div>
+
 <div class="main-content">
 
   <!-- HEADER -->
@@ -430,18 +478,6 @@
   </div>
 
 </div><!-- end .main-content -->
-
-<!-- FOOTER -->
-<div class="footer">
-  <div>
-    {{ schule.get('schule_name', '') }} · {{ schule.get('schule_strasse', '') }} ·
-    {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
-  </div>
-  <div class="bank-info">
-    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}<br>
-    {{ schule.get('schule_bank', '') }}
-  </div>
-</div>
 
 </body>
 </html>

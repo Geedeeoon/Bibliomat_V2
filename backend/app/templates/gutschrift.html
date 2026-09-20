@@ -7,6 +7,24 @@
     @page {
       size: A4;
       margin: 18mm 18mm 30mm 18mm;
+      @bottom-left {
+        content: element(pageFooterLeft);
+        width: 44%;
+        padding: 6px 0 0 18mm;
+        border-top: 1px solid #ccc;
+      }
+      @bottom-right {
+        content: element(pageFooterRight);
+        width: 44%;
+        padding: 6px 18mm 0 0;
+        border-top: 1px solid #ccc;
+        text-align: right;
+      }
+      @bottom-center {
+        content: "";
+        width: 12%;
+        border-top: 1px solid #ccc;
+      }
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -18,7 +36,7 @@
       min-height: 100%;
     }
     .main-content {
-      padding-bottom: 28mm;
+      padding-bottom: 0;
     }
 
     /* ── Header ── */
@@ -203,11 +221,43 @@
         left: auto !important; right: auto !important; bottom: auto !important;
         margin-top: auto !important;
         padding: 6px 0 5px !important;
+        /* Liegt vorne im DOM (siehe Body-Anfang), damit WeasyPrints
+           "running element" ab Seite 1 greift; order hält ihn hier trotzdem
+           visuell am Ende des flex-Body. */
+        order: 1 !important;
       }
+    }
+
+    /* ── Browser-Druck / Als PDF speichern ──
+       Footer als wiederkehrendes @page-Randfeld statt position:fixed —
+       vermeidet, dass er knapp nicht mehr passenden Tabelleninhalt überlappt
+       (siehe BugFix.md: abgeschnittenes "Kunstgeld" bei Rechnungen). */
+    @media print {
+      .footer {
+        position: static !important;
+        border: 0 !important;
+        padding: 0 !important;
+        background: none !important;
+      }
+      .footer-address { position: running(pageFooterLeft); }
+      .footer-bank { position: running(pageFooterRight); }
     }
   </style>
 </head>
 <body>
+<!-- FOOTER (steht hier vorne im DOM, damit WeasyPrints "running element"
+     bereits ab Seite 1 greift) -->
+<div class="footer">
+  <div class="footer-address">
+    {{ schule.get('schule_name', '') }} · {{ schule.get('schule_strasse', '') }} ·
+    {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
+  </div>
+  <div class="footer-bank bank-info">
+    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}<br>
+    {{ schule.get('schule_bank', '') }}
+  </div>
+</div>
+
 <div class="main-content">
 
   <!-- HEADER -->
@@ -295,18 +345,6 @@
   </div>
 
 </div><!-- end .main-content -->
-
-<!-- FOOTER -->
-<div class="footer">
-  <div>
-    {{ schule.get('schule_name', '') }} · {{ schule.get('schule_strasse', '') }} ·
-    {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
-  </div>
-  <div class="bank-info">
-    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}<br>
-    {{ schule.get('schule_bank', '') }}
-  </div>
-</div>
 
 </body>
 </html>

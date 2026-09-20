@@ -15,12 +15,17 @@ RUN uv venv /app/.venv && \
 FROM python:3.12-slim
 
 # WeasyPrint system dependencies
+# fonts-liberation liefert Arial/Helvetica-metrikkompatible Schriften. Ohne
+# Font-Pakete fällt Pango auf eine schmalere/breitere Ersatzschrift zurück,
+# wodurch Layouts, die lokal (mit echter Helvetica) knapp auf eine Seite
+# passen, im Container umbrechen bzw. abgeschnitten wirken.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 \
     libffi-dev \
     libcairo2 \
+    fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
