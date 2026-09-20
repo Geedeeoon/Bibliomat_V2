@@ -506,7 +506,7 @@ function Home({ onNav, onOpenStudent, accent, density }) {
                 onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
                 onMouseLeave={(e) => e.currentTarget.style.background = ''}
               >
-                <div style={{ flexShrink: 0, width: 80 }}>
+                <div style={{ flexShrink: 0, width: 100 }}>
                   <Badge tone={typMeta.tone} dot>{typMeta.label}</Badge>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

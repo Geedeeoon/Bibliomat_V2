@@ -83,7 +83,7 @@ const Badge = ({ tone = 'slate', children, dot = false, style = {} }) => {
       width: 'fit-content', maxWidth: '100%', justifySelf: 'start',
       ...style,
     }}>
-      {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.dot }}/>}
+      {dot && <span style={{ width: 6, height: 6, borderRadius: '50%', background: t.dot, flexShrink: 0 }}/>}
       {children}
     </span>
   );
