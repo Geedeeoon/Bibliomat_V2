@@ -8,25 +8,11 @@
   <style>
     @page {
       size: A4;
-      margin: 18mm 18mm 26mm 18mm;
-      @bottom-left {
-        content: element(pageFooterLeft);
-        width: 44%;
-        padding: 6px 0 0 18mm;
-        border-top: 1px solid #ccc;
-        vertical-align: top;
-      }
-      @bottom-right {
-        content: element(pageFooterRight);
-        width: 44%;
-        padding: 6px 18mm 0 0;
-        border-top: 1px solid #ccc;
-        text-align: right;
-        vertical-align: top;
-      }
+      margin: 18mm 18mm 30mm 18mm;
       @bottom-center {
-        content: "";
-        width: 12%;
+        content: element(pageFooter);
+        width: 100%;
+        padding: 6px 18mm 0 18mm;
         border-top: 1px solid #ccc;
       }
     }
@@ -44,7 +30,7 @@
     }
     .main-content {
       flex: 1;
-      padding-bottom: 24mm; /* Abstand über festem Footer */
+      padding-bottom: 28mm; /* Abstand über festem Footer */
     }
 
     /* ── Header ── */
@@ -209,11 +195,9 @@
       padding: 6px 18mm 5px;
       font-size: 7.5pt;
       color: #777;
-      display: flex;
-      justify-content: space-between;
       background: #fff;
     }
-    .footer .bank-info { text-align: right; }
+    .footer > div + div { margin-top: 2px; }
 
     /* ── Screen-Vorschau: identisch mit Druck ── */
     @media screen {
@@ -245,13 +229,8 @@
          den letzten Tabelleninhalt zu überlappen, wenn er knapp nicht mehr
          auf die Seite passt (siehe BugFix.md: abgeschnittenes "Kunstgeld"). */
       .footer {
-        position: static !important;
-        border: 0 !important;
-        padding: 0 !important;
-        background: none !important;
+        position: running(pageFooter);
       }
-      .footer-address { position: running(pageFooterLeft); }
-      .footer-bank { position: running(pageFooterRight); }
     }
   </style>
 </head>
@@ -260,12 +239,14 @@
      bereits ab Seite 1 greift — am Ende platziert würde er erst ab der
      Seite erscheinen, auf der dieses Element im normalen Fluss läge) -->
 <div class="footer">
-  <div class="footer-address">
+  <div>
     {{ schule.get('schule_name', '') }} · {{ schule.get('schule_strasse', '') }} ·
     {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
   </div>
-  <div class="footer-bank bank-info">
-    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}<br>
+  <div>
+    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}
+  </div>
+  <div>
     {{ schule.get('schule_bank', '') }}
   </div>
 </div>
