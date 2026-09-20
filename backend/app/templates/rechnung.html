@@ -230,6 +230,9 @@
          auf die Seite passt (siehe BugFix.md: abgeschnittenes "Kunstgeld"). */
       .footer {
         position: running(pageFooter);
+        border: 0 !important;
+        padding: 0 !important;
+        background: none !important;
       }
     }
   </style>
@@ -244,9 +247,7 @@
     {{ schule.get('schule_plz', '') }} {{ schule.get('schule_ort', '') }}
   </div>
   <div>
-    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }}
-  </div>
-  <div>
+    IBAN: {{ schule.get('schule_iban', '') }} · BIC: {{ schule.get('schule_bic', '') }} ·
     {{ schule.get('schule_bank', '') }}
   </div>
 </div>
